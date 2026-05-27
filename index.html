@@ -106,7 +106,7 @@
     const escape = (s) => String(s||'').replace(/[<>&"]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));
     const stripTags = (s) => String(s||'').replace(/<[^>]+>/g,' ').replace(/&[a-z#0-9]+;/gi,' ').replace(/\s+/g,' ').trim();
     const fmtTime = (iso) => { if(!iso) return ''; const d=new Date(iso); if(isNaN(d.getTime())) return ''; const diff=(Date.now()-d.getTime())/1000; if(diff<60) return 'net nu'; if(diff<3600) return Math.floor(diff/60)+' min geleden'; if(diff<86400) return Math.floor(diff/3600)+' u geleden'; return d.toLocaleString('nl-BE',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}); };
-    const LABELS = {all:'Alles',geopolitiek:'Geopolitiek',markten:'Markten','centrale-banken':'Centrale banken',research:'Research',opinie:'Opinie',social:'Social'};
+    const LABELS = {all:'Alles',geopolitiek:'Geopolitiek',markten:'Markten','centrale-banken':'Centrale banken',research:'Research',opinie:'Opinie',social:'Onderstroom'};
     const state = { cat:'all', q:'', lang:'', data:null };
 
     async function checkSession() {
@@ -148,7 +148,7 @@
           { id:'opinion', label:'Dagelijks' },
           { id:'weekly',  label:'Weekend'   },
           { id:'topic',   label:'Topic'     },
-          { id:'social',  label:'Social'    },
+          { id:'social',  label:'Onderstroom'},
         ];
         const renderOne = (kindId) => {
           const latest = ops.latest[kindId];
