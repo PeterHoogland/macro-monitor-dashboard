@@ -93,7 +93,7 @@
     </main>
     <footer class="wrap foot">
       <span id="foot">Laden…</span>
-      <span>GitHub Pages · Supabase backend · <a href="#" id="logout">Logout</a></span>
+      <span>GitHub Pages · Supabase backend · <a href="https://peterhoogland.github.io/macro-monitor-dashboard/" id="refresh">↻ refresh</a></span>
     </footer>
   </div>
 
@@ -110,9 +110,10 @@
     const state = { cat:'all', q:'', lang:'', data:null };
 
     async function checkSession() {
-      const { data:{ session } } = await supabase.auth.getSession();
-      if (session) { $('app').style.display='block'; $('login-gate').style.display='none'; loadData(session.access_token); }
-      else { $('login-gate').style.display='grid'; $('app').style.display='none'; }
+      // Voorlopige versie: geen auth gate — toon dashboard direct
+      $('app').style.display='block';
+      $('login-gate').style.display='none';
+      loadData(SUPABASE_ANON_KEY);
     }
     $('login-form').addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -174,7 +175,7 @@
     function render() {
       const d = state.data;
       $('meta').innerHTML = '<strong>'+d.totalArticles+'</strong> artikels · <strong>'+d.newThisRun+'</strong> nieuw · <strong>'+d.sourcesOk+'/'+d.sources+'</strong> bronnen ok · '+fmtTime(d.generatedAt);
-      $('foot').textContent = 'GitHub Pages · '+d.totalArticles+' artikels uit '+d.sources+' bronnen';
+      $('foot').textContent = 'GitHub Pages (publiek voorlopig) · '+d.totalArticles+' artikels uit '+d.sources+' bronnen';
       const cats = ['geopolitiek','markten','centrale-banken','research','opinie','social'];
       const counts = { all: d.items.length };
       for (const c of cats) counts[c] = 0;
