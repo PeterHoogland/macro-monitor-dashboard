@@ -49,7 +49,7 @@
     .status-row:last-child{border-bottom:none}
     .status-row .ok{color:var(--tag-mkt)}.status-row .ko{color:var(--accent)}
     .foot{display:flex;justify-content:space-between;padding-top:18px;border-top:1px solid var(--line);font-family:ui-sans-serif,system-ui,sans-serif;font-size:12px;color:var(--muted);padding-bottom:24px}
-    .empty{padding:40px;text-align:center;color:var(--muted)}
+    .empty{padding:40px;text-align:center;color:var(--muted)}.output-tabs{display:flex;gap:4px;margin-bottom:10px;flex-wrap:wrap}.out-tab{font-family:ui-sans-serif,system-ui,sans-serif;font-size:11px;padding:3px 8px;border-radius:999px;border:1px solid var(--line);background:var(--paper);cursor:pointer;color:var(--ink)}.out-tab.active{background:var(--ink);color:#fff;border-color:var(--ink)}
   </style>
 </head>
 <body>
@@ -83,7 +83,11 @@
     <main class="wrap">
       <section id="list" class="list">— laden —</section>
       <aside class="side">
-        <div class="card" id="opinies-card" style="display:none"><h3>Opiniestukken</h3><div id="opinies"></div></div>
+        <div class="card" id="outputs-card" style="display:none">
+          <h3>Outputs</h3>
+          <div class="output-tabs" id="output-tabs"></div>
+          <div id="output-content"></div>
+        </div>
         <div class="card"><h3>Status bronnen</h3><div id="status"></div></div>
       </aside>
     </main>
@@ -135,18 +139,36 @@
     }
     async function loadOpinies(token) {
       try {
-        const r = await fetch(SUPABASE_URL+'/functions/v1/api/opinions', { headers:{ Authorization:'Bearer '+token, apikey:SUPABASE_ANON_KEY }});
+        const r = await fetch(SUPABASE_URL+'/functions/v1/api/outputs', { headers:{ Authorization:'Bearer '+token, apikey:SUPABASE_ANON_KEY }});
         const ops = await r.json();
-        if (!ops?.all?.length) return;
-        $('opinies-card').style.display='block';
-        const latest = ops.latest;
-        $('opinies').innerHTML = `
-          <div style="font-family:ui-serif,Georgia,serif;font-size:15px;font-weight:600;margin-bottom:4px">${escape(latest.title)}</div>
-          <div style="font-size:12px;color:var(--muted);font-family:ui-sans-serif,system-ui,sans-serif;margin-bottom:8px">${escape(latest.date)} · ${escape(latest.invalshoek||'')} · ${latest.woorden||'?'} w.</div>
-          <div style="font-size:13px;line-height:1.45;color:var(--ink);margin-bottom:12px">${escape(latest.preview||'')}</div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <a href="${SUPABASE_URL}/functions/v1${latest.docx}?token=${encodeURIComponent(token)}" style="display:inline-block;padding:6px 12px;background:var(--accent);color:#fff;border-radius:6px;font-family:ui-sans-serif,system-ui,sans-serif;font-size:13px">⬇ .docx</a>
-          </div>`;
+        if (!ops?.latest) return;
+        $('outputs-card').style.display='block';
+        const kinds = [
+          { id:'opinion', label:'Dagelijks' },
+          { id:'weekly',  label:'Weekend'   },
+          { id:'topic',   label:'Topic'     },
+          { id:'social',  label:'Social'    },
+        ];
+        const renderOne = (kindId) => {
+          const latest = ops.latest[kindId];
+          if (!latest) return '<div style="font-family:ui-sans-serif,system-ui,sans-serif;font-size:13px;color:var(--muted);padding:8px 0">Nog geen output.</div>';
+          const tkn = encodeURIComponent(token);
+          return `
+            <div style="font-family:ui-serif,Georgia,serif;font-size:15px;font-weight:600;margin-bottom:4px">${escape(latest.title||'')}</div>
+            <div style="font-size:12px;color:var(--muted);font-family:ui-sans-serif,system-ui,sans-serif;margin-bottom:8px">${escape(latest.date)} · ${latest.woorden||'?'} w.</div>
+            <div style="font-size:13px;line-height:1.45;color:var(--ink);margin-bottom:12px">${escape(latest.preview||'')}</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <a target="_blank" href="${SUPABASE_URL}/functions/v1${latest.md}?token=${tkn}" style="display:inline-block;padding:6px 12px;background:var(--paper);border:1px solid var(--line);color:var(--ink);border-radius:6px;font-family:ui-sans-serif,system-ui,sans-serif;font-size:13px;text-decoration:none">md</a>
+              ${(kindId==='opinion'||kindId==='weekly') ? `<a href="${SUPABASE_URL}/functions/v1${latest.docx}?token=${tkn}" style="display:inline-block;padding:6px 12px;background:var(--accent);color:#fff;border-radius:6px;font-family:ui-sans-serif,system-ui,sans-serif;font-size:13px;text-decoration:none">docx</a>`:''}
+            </div>`;
+        };
+        let activeKind = 'opinion';
+        const renderTabs = () => {
+          $('output-tabs').innerHTML = kinds.map(k => '<button class="out-tab'+(activeKind===k.id?' active':'')+'" data-k="'+k.id+'">'+k.label+(ops.latest[k.id]?' ·':'')+'</button>').join('');
+          for (const b of $('output-tabs').querySelectorAll('.out-tab')) b.addEventListener('click', () => { activeKind=b.dataset.k; renderTabs(); $('output-content').innerHTML=renderOne(activeKind); });
+        };
+        renderTabs();
+        $('output-content').innerHTML = renderOne(activeKind);
       } catch {}
     }
     function render() {
