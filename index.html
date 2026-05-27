@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Macro Monitor</title>
+  <style>
+    :root { --bg:#f7f5f0; --paper:#fff; --ink:#14202b; --muted:#5a6675; --line:#e3dfd4; --accent:#8a1c2b; --accent-soft:#f3e5e7; --tag-geo:#3b5a82; --tag-mkt:#1f6f4a; --tag-cb:#7a4b1a; --tag-res:#5a3a8a; --tag-opi:#8a1c2b; --tag-soc:#444; font-family:ui-serif,Georgia,"Times New Roman",serif; }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-size:16px;line-height:1.5}
+    a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
+    .wrap{max-width:1200px;margin:0 auto;padding:0 24px}
+    #login-gate{display:grid;place-items:center;min-height:100vh}
+    #login-gate .card{width:380px;padding:28px 32px;background:var(--paper);border:1px solid var(--line);border-radius:12px}
+    #login-gate h2{margin:0 0 12px}#login-gate p{color:var(--muted);margin:0 0 16px}
+    #login-gate form{display:flex;gap:8px}
+    #login-gate input{flex:1;font-family:ui-sans-serif,system-ui,sans-serif;font-size:14px;padding:9px 12px;border:1px solid var(--line);border-radius:8px}
+    #login-gate button{font-family:ui-sans-serif,system-ui,sans-serif;font-size:14px;padding:9px 16px;background:var(--accent);color:#fff;border:none;border-radius:8px;cursor:pointer}
+    #login-gate .muted{margin-top:12px;font-family:ui-sans-serif,system-ui,sans-serif;font-size:13px;color:var(--muted)}
+    .topbar{background:var(--paper);border-bottom:1px solid var(--line);padding:18px 0}
+    .topbar .wrap{display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap}
+    .brand{display:flex;align-items:center;gap:14px}
+    .brand-mark{width:52px;height:52px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;font-family:ui-sans-serif,system-ui,sans-serif;font-weight:700;letter-spacing:1px}
+    .brand h1{margin:0;font-size:22px}
+    .brand .sub{color:var(--muted);font-size:13px;font-family:ui-sans-serif,system-ui,sans-serif}
+    .meta{color:var(--muted);font-size:13px;font-family:ui-sans-serif,system-ui,sans-serif;text-align:right}
+    .filters{display:flex;align-items:center;gap:16px;padding:16px 24px;flex-wrap:wrap}
+    .tabs{display:flex;flex-wrap:wrap;gap:6px}
+    .tab{font-family:ui-sans-serif,system-ui,sans-serif;font-size:13px;padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--paper);cursor:pointer;color:var(--ink)}
+    .tab.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+    .tab .count{opacity:.65;margin-left:6px;font-variant-numeric:tabular-nums}
+    .search-wrap{display:flex;gap:8px;margin-left:auto}
+    #q,#lang{font-family:ui-sans-serif,system-ui,sans-serif;font-size:14px;padding:8px 12px;border:1px solid var(--line);background:var(--paper);border-radius:8px}
+    #q{min-width:280px}
+    main.wrap{display:grid;grid-template-columns:1fr 320px;gap:32px;padding-top:16px;padding-bottom:40px}
+    @media (max-width:720px){main.wrap{grid-template-columns:1fr}.side{order:2}}
+    .list .item{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin-bottom:14px}
+    .item h2{font-size:18px;margin:0 0 6px;line-height:1.3}.item h2 a{color:var(--ink)}.item h2 a:hover{color:var(--accent)}
+    .item .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;color:var(--muted);font-size:12px;font-family:ui-sans-serif,system-ui,sans-serif;margin-bottom:6px}
+    .item .src{color:var(--ink);font-weight:600}
+    .tag{display:inline-block;font-size:11px;font-family:ui-sans-serif,system-ui,sans-serif;padding:2px 8px;border-radius:999px;color:#fff;letter-spacing:.3px}
+    .tag.geopolitiek{background:var(--tag-geo)}.tag.markten{background:var(--tag-mkt)}.tag.centrale-banken{background:var(--tag-cb)}
+    .tag.research{background:var(--tag-res)}.tag.opinie{background:var(--tag-opi)}.tag.social{background:var(--tag-soc)}
+    .lang-pill{font-size:11px;padding:1px 6px;border-radius:4px;background:var(--accent-soft);color:var(--accent);font-family:ui-sans-serif,system-ui,sans-serif}
+    .item p{margin:6px 0 0;color:var(--ink);font-size:14.5px}
+    .side .card{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:14px}
+    .side h3{margin:0 0 8px;font-size:15px;font-family:ui-sans-serif,system-ui,sans-serif;letter-spacing:.3px;text-transform:uppercase;color:var(--muted)}
+    .status-row{font-family:ui-sans-serif,system-ui,sans-serif;font-size:12px;display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px dotted var(--line)}
+    .status-row:last-child{border-bottom:none}
+    .status-row .ok{color:var(--tag-mkt)}.status-row .ko{color:var(--accent)}
+    .foot{display:flex;justify-content:space-between;padding-top:18px;border-top:1px solid var(--line);font-family:ui-sans-serif,system-ui,sans-serif;font-size:12px;color:var(--muted);padding-bottom:24px}
+    .empty{padding:40px;text-align:center;color:var(--muted)}
+  </style>
+</head>
+<body>
+  <div id="login-gate" style="display:none">
+    <div class="card">
+      <h2>Macro Monitor</h2>
+      <p>Voer je e-mail in voor een magic-link.</p>
+      <form id="login-form">
+        <input id="email" type="email" required placeholder="naam@voorbeeld.be">
+        <button type="submit">Stuur magic-link</button>
+      </form>
+      <div id="login-msg" class="muted"></div>
+    </div>
+  </div>
+
+  <div id="app" style="display:none">
+    <header class="topbar"><div class="wrap">
+      <div class="brand"><div class="brand-mark">MM</div><div>
+        <h1>Macro Monitor</h1>
+        <div class="sub">Peter Hoogland · Northwind Capital · live feed + dagelijks opiniestuk</div>
+      </div></div>
+      <div class="meta" id="meta">— laden —</div>
+    </div></header>
+    <nav class="filters wrap">
+      <div class="tabs" id="tabs"></div>
+      <div class="search-wrap">
+        <input id="q" type="search" placeholder="Zoek in titels en samenvattingen…" autocomplete="off">
+        <select id="lang"><option value="">Alle talen</option><option value="nl">NL</option><option value="fr">FR</option><option value="en">EN</option><option value="de">DE</option></select>
+      </div>
+    </nav>
+    <main class="wrap">
+      <section id="list" class="list">— laden —</section>
+      <aside class="side">
+        <div class="card" id="opinies-card" style="display:none"><h3>Opiniestukken</h3><div id="opinies"></div></div>
+        <div class="card"><h3>Status bronnen</h3><div id="status"></div></div>
+      </aside>
+    </main>
+    <footer class="wrap foot">
+      <span id="foot">Laden…</span>
+      <span>GitHub Pages · Supabase backend · <a href="#" id="logout">Logout</a></span>
+    </footer>
+  </div>
+
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+    const SUPABASE_URL = 'https://teiavtucajajkpezyolt.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRlaWF2dHVjYWphamtwZXp5b2x0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk4NzU3NDksImV4cCI6MjA5NTQ1MTc0OX0.h0tmChzc155taknxdGOgrn7gM0BhiPR3vQDpkcNqSwU';
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const $ = (id) => document.getElementById(id);
+    const escape = (s) => String(s||'').replace(/[<>&"]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));
+    const stripTags = (s) => String(s||'').replace(/<[^>]+>/g,' ').replace(/&[a-z#0-9]+;/gi,' ').replace(/\s+/g,' ').trim();
+    const fmtTime = (iso) => { if(!iso) return ''; const d=new Date(iso); if(isNaN(d.getTime())) return ''; const diff=(Date.now()-d.getTime())/1000; if(diff<60) return 'net nu'; if(diff<3600) return Math.floor(diff/60)+' min geleden'; if(diff<86400) return Math.floor(diff/3600)+' u geleden'; return d.toLocaleString('nl-BE',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}); };
+    const LABELS = {all:'Alles',geopolitiek:'Geopolitiek',markten:'Markten','centrale-banken':'Centrale banken',research:'Research',opinie:'Opinie',social:'Social'};
+    const state = { cat:'all', q:'', lang:'', data:null };
+
+    async function checkSession() {
+      const { data:{ session } } = await supabase.auth.getSession();
+      if (session) { $('app').style.display='block'; $('login-gate').style.display='none'; loadData(session.access_token); }
+      else { $('login-gate').style.display='grid'; $('app').style.display='none'; }
+    }
+    $('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = $('email').value;
+      $('login-msg').textContent = 'Versturen…';
+      const { error } = await supabase.auth.signInWithOtp({ email, options:{ emailRedirectTo: window.location.href, shouldCreateUser:false } });
+      if (error) $('login-msg').textContent = '✗ '+error.message;
+      else $('login-msg').textContent = '✓ Check je inbox voor de magic-link.';
+    });
+    $('logout').addEventListener('click', async (e) => { e.preventDefault(); await supabase.auth.signOut(); location.reload(); });
+    supabase.auth.onAuthStateChange((_e, session) => { if(session){ $('app').style.display='block'; $('login-gate').style.display='none'; loadData(session.access_token); } });
+    checkSession();
+
+    async function loadData(token) {
+      try {
+        const r = await fetch(SUPABASE_URL+'/functions/v1/api/feed', { headers:{ Authorization:'Bearer '+token, apikey:SUPABASE_ANON_KEY }});
+        if (!r.ok) throw new Error('HTTP '+r.status);
+        state.data = await r.json();
+        render(); loadOpinies(token);
+      } catch (e) {
+        $('meta').textContent = 'feed niet beschikbaar ('+e.message+')';
+        $('list').innerHTML = '<div class="empty">Geen feed. Eerste run mogelijk nog niet gedraaid.</div>';
+      }
+    }
+    async function loadOpinies(token) {
+      try {
+        const r = await fetch(SUPABASE_URL+'/functions/v1/api/opinions', { headers:{ Authorization:'Bearer '+token, apikey:SUPABASE_ANON_KEY }});
+        const ops = await r.json();
+        if (!ops?.all?.length) return;
+        $('opinies-card').style.display='block';
+        const latest = ops.latest;
+        $('opinies').innerHTML = `
+          <div style="font-family:ui-serif,Georgia,serif;font-size:15px;font-weight:600;margin-bottom:4px">${escape(latest.title)}</div>
+          <div style="font-size:12px;color:var(--muted);font-family:ui-sans-serif,system-ui,sans-serif;margin-bottom:8px">${escape(latest.date)} · ${escape(latest.invalshoek||'')} · ${latest.woorden||'?'} w.</div>
+          <div style="font-size:13px;line-height:1.45;color:var(--ink);margin-bottom:12px">${escape(latest.preview||'')}</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <a href="${SUPABASE_URL}/functions/v1${latest.docx}?token=${encodeURIComponent(token)}" style="display:inline-block;padding:6px 12px;background:var(--accent);color:#fff;border-radius:6px;font-family:ui-sans-serif,system-ui,sans-serif;font-size:13px">⬇ .docx</a>
+          </div>`;
+      } catch {}
+    }
+    function render() {
+      const d = state.data;
+      $('meta').innerHTML = '<strong>'+d.totalArticles+'</strong> artikels · <strong>'+d.newThisRun+'</strong> nieuw · <strong>'+d.sourcesOk+'/'+d.sources+'</strong> bronnen ok · '+fmtTime(d.generatedAt);
+      $('foot').textContent = 'GitHub Pages · '+d.totalArticles+' artikels uit '+d.sources+' bronnen';
+      const cats = ['geopolitiek','markten','centrale-banken','research','opinie','social'];
+      const counts = { all: d.items.length };
+      for (const c of cats) counts[c] = 0;
+      for (const it of d.items) counts[it.category] = (counts[it.category]||0)+1;
+      $('tabs').innerHTML = ['all', ...cats].map(k => '<button class="tab'+(state.cat===k?' active':'')+'" data-cat="'+k+'">'+LABELS[k]+'<span class="count">'+(counts[k]||0)+'</span></button>').join('');
+      for (const btn of $('tabs').querySelectorAll('.tab')) btn.addEventListener('click', () => { state.cat=btn.dataset.cat; render(); });
+      const term = state.q.toLowerCase().trim();
+      const filtered = d.items.filter(it => {
+        if (state.cat!=='all' && it.category!==state.cat) return false;
+        if (state.lang && it.lang!==state.lang) return false;
+        if (term) { const hay=(it.title+' '+(it.summary||'')+' '+it.source).toLowerCase(); if(!hay.includes(term)) return false; }
+        return true;
+      });
+      if (!filtered.length) { $('list').innerHTML='<div class="empty">Geen artikels.</div>'; return; }
+      $('list').innerHTML = filtered.slice(0,300).map(it => `
+        <article class="item">
+          <div class="row">
+            <span class="tag ${escape(it.category)}">${escape(LABELS[it.category]||it.category)}</span>
+            <span class="src">${escape(it.source)}</span>
+            <span class="lang-pill">${escape((it.lang||'').toUpperCase())}</span>
+            <span>${escape(fmtTime(it.pub_date||it.pubDate))}</span>
+          </div>
+          <h2><a href="${escape(it.link)}" target="_blank" rel="noopener noreferrer">${escape(it.title)}</a></h2>
+          ${it.summary ? '<p>'+escape(stripTags(it.summary))+'</p>' : ''}
+        </article>`).join('');
+      $('status').innerHTML = (d.sourceStatus||[]).sort((a,b)=>(b.items||0)-(a.items||0)).map(r => '<div class="status-row"><span>'+escape(r.name)+'</span><span class="'+(r.ok?'ok':'ko')+'">'+(r.ok?r.items+' it.':(r.status?'HTTP '+r.status:'fail'))+'</span></div>').join('');
+    }
+    $('q').addEventListener('input', e => { state.q=e.target.value; render(); });
+    $('lang').addEventListener('change', e => { state.lang=e.target.value; render(); });
+  </script>
+</body>
+</html>
